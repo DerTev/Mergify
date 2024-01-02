@@ -12,6 +12,7 @@
       <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
       <PackageReference Include="Sharprompt" Version="2.4.5" />
+      <PackageReference Include="ShellProgressBar" Version="5.2.0" />
       <PackageReference Include="SpotifyAPI.Web" Version="7.0.2" />
       <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.2" />
     </ItemGroup>

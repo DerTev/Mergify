@@ -9,7 +9,7 @@ new SpotifyLogin(Prompt.Input<string>("Whats your Client-Id?"), async client =>
     Merger.SpotifyClient = client;
     await Merger.SelectPlaylists();
     if (!Merger.ConfirmMerge()) Environment.Exit(0);
-    Console.WriteLine("Successfully merged " + await Merger.Merge() + " songs!");
+    await Merger.Merge();
     
     Environment.Exit(0);
 });
