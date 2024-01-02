@@ -4,10 +4,13 @@ namespace Mergify.Cli;
 
 public static class Extensions
 {
-    public static string GetUri(this PlaylistTrack<IPlayableItem> track)
+    public static string GetUri(this IPlayableItem track)
     {
-        if (track.Track is FullTrack fullTrack) return fullTrack.Uri;
-        if (track.Track is FullEpisode fullEpisode) return fullEpisode.Uri;
-        return "";
+        return track switch
+        {
+            FullTrack fullTrack => fullTrack.Uri,
+            FullEpisode fullEpisode => fullEpisode.Uri,
+            _ => ""
+        };
     }
 }
