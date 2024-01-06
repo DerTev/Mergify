@@ -1,3 +1,3 @@
 # Mergify
 
-*CLI-App for merging of two Spotify-Playlists*
+*CLI-App for merging of Spotify-Playlists*

@@ -6,7 +6,7 @@ namespace Mergify.Cli;
 
 public class Merger
 {
-    private static FullPlaylist? _fromPlaylist;
+    private static IEnumerable<FullPlaylist>? _fromPlaylists;
     private static FullPlaylist? _toPlaylist;
 
     public static SpotifyClient? SpotifyClient;
@@ -17,7 +17,7 @@ public class Merger
         var paginatedAvailablePlaylists = await SpotifyClient.Playlists.CurrentUsers();
         var availablePlaylists = await SpotifyClient.PaginateAll(paginatedAvailablePlaylists);
 
-        _fromPlaylist = Prompt.Select(new SelectOptions<FullPlaylist>
+        _fromPlaylists = Prompt.MultiSelect(new MultiSelectOptions<FullPlaylist>
         {
             Message = "From which playlist do you want to merge?",
             Items = availablePlaylists.Concat(new[] { new FullPlaylist { Name = "Saved Tracks" } }),
@@ -34,25 +34,34 @@ public class Merger
 
     public static bool ConfirmMerge()
         => Prompt.Confirm(
-            $"Do you really want to merge all Songs from \"{_fromPlaylist!.Name}\" into \"{_toPlaylist!.Name}\"?");
+            "Do you really want to merge all Songs from \""
+            + String.Join(", ", _fromPlaylists!.Select(playlist => playlist.Name))
+            + $"\" into \"{_toPlaylist!.Name}\"?");
+
+    private static async Task IndexPlaylist(FullPlaylist playlist, List<string> indexedItems)
+    {
+        indexedItems.AddRange(playlist.Id == null
+            ? (await SpotifyClient!.PaginateAll(await SpotifyClient.Library.GetTracks())).Select(item =>
+                item.Track.GetUri())
+            : (await SpotifyClient!.PaginateAll(await SpotifyClient.Playlists.GetItems(playlist.Id!))).Select(
+                item => item.Track.GetUri()));
+    }
 
     public static async Task Merge()
     {
-        var toPlaylistItems =
-            await SpotifyClient!.PaginateAll(await SpotifyClient.Playlists.GetItems(_toPlaylist!.Id!));
-        var toPlaylistUris = toPlaylistItems.Select(item => item.Track.GetUri()).ToList();
+        var indexedItems = new List<string>();
         var urisToAdd = new List<string>();
 
-        var fromTracks = _fromPlaylist!.Id == null
-            ? (await SpotifyClient.PaginateAll(await SpotifyClient.Library.GetTracks())).Select(item => item.Track)
-            : (await SpotifyClient.PaginateAll(await SpotifyClient.Playlists.GetItems(_fromPlaylist.Id!))).Select(
-                item => item.Track);
-        var progressBar = new ProgressBar(fromTracks.Count() + 2, "Indexing tracks...",
+        foreach (var fromPlaylist in _fromPlaylists!) await IndexPlaylist(fromPlaylist, indexedItems);
+        var toPlaylistUris =
+            (await SpotifyClient!.PaginateAll(await SpotifyClient.Playlists.GetItems(_toPlaylist!.Id!)))
+            .Select(item => item.Track.GetUri()).ToList();
+
+        var progressBar = new ProgressBar(indexedItems.Count + 2, "Indexing tracks...",
             new ProgressBarOptions { ProgressBarOnBottom = true });
-        foreach (var track in fromTracks)
+        foreach (var track in indexedItems)
         {
-            var uri = track.GetUri();
-            if (!toPlaylistUris.Contains(uri)) urisToAdd.Add(uri);
+            if (!toPlaylistUris.Contains(track)) urisToAdd.Add(track);
             progressBar.Tick();
         }
 
