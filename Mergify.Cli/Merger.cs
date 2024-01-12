@@ -61,7 +61,7 @@ public class Merger
             new ProgressBarOptions { ProgressBarOnBottom = true });
         foreach (var track in indexedItems)
         {
-            if (!toPlaylistUris.Contains(track)) urisToAdd.Add(track);
+            if (!toPlaylistUris.Contains(track) && !urisToAdd.Contains(track)) urisToAdd.Add(track);
             progressBar.Tick();
         }
 
