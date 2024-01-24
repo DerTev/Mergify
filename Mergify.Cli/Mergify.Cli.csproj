@@ -17,4 +17,8 @@
       <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Mergify.Logic\Mergify.Logic.csproj" />
+    </ItemGroup>
+
 </Project>
