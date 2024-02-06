@@ -1,0 +1,20 @@
+﻿@inject IJSRuntime Js
+@inject NavigationManager Navigation
+@using Mergify.Web.Components
+
+@switch (_loggingIn)
+{
+    case true:
+        <Selector/>
+        break;
+    case false:
+        <Auth/>
+        break;
+}
+
+@code {
+    bool? _loggingIn;
+
+    protected override async Task OnInitializedAsync() => _loggingIn = await AuthFlow.IsLoggingIn(Js, Navigation);
+
+}

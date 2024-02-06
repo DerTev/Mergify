@@ -1,0 +1,29 @@
+﻿@inject IJSRuntime Js
+@inject NavigationManager Navigation
+
+<div class="text-center">
+    <h1>Authentication required!</h1>
+    <p>Hey! <br/>Cool to see you here!</p>
+    <p>
+        To use this app, you need to authenticate yourself using Spotify!
+        <br/>Please type the Client ID of a Spotify-App of you into the field below!
+    </p>
+    <input @oninput="args => _clientId = args.Value!.ToString()!" type="text" class="outline primary"
+           style="margin: 1em auto; max-width: 30%;" placeholder="Spotify Client-ID"/>
+    <p>
+        This website uses Cookies to store information during the login process.
+        <br/>By submitting this button, you accept those Cookies.
+        <br/>You will be send to the Spotify login then.
+    </p>
+    <button @onclick="Authenticate" class="button outline primary">Authenticate!</button>
+</div>
+
+@code {
+    string _clientId = "";
+
+    async Task Authenticate()
+    {
+        if (_clientId.Trim() != "") await AuthFlow.RequestLogin(Js, Navigation, _clientId);
+    }
+
+}
