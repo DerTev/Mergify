@@ -59,6 +59,14 @@ public class AuthFlow
         {
             if (args.NewState == WebServerState.Listening) RequestAuth();
         };
+        _webServer.OnHttpException += async (context, exception) =>
+        {
+            if (exception.StatusCode != 404)
+            {
+                await HttpExceptionHandler.Default(context, exception);
+                Environment.Exit(1);
+            }
+        };
 
         _webServer.RunAsync().GetAwaiter().GetResult();
     }
