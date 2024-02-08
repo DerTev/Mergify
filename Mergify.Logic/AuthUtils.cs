@@ -18,10 +18,10 @@ public static class AuthUtils
         };
     }
 
-    public static async Task<SpotifyClient> ProcessAuth(string clientId, string verifier, string code)
+    public static async Task<SpotifyClient> ProcessAuth(string redirectUri, string clientId, string verifier, string code)
     {
         var initialResponse = await new OAuthClient().RequestToken(new PKCETokenRequest(clientId, code,
-            new Uri("http://localhost:8080/callback"), verifier));
+            new Uri(redirectUri), verifier));
         return new SpotifyClient(initialResponse.AccessToken);
     }
 }

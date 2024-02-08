@@ -27,7 +27,8 @@ public class AuthFlow
             return;
         }
 
-        var spotifyClient = await AuthUtils.ProcessAuth(_clientId, _verifier, context.GetRequestQueryData()["code"]!);
+        var spotifyClient = await AuthUtils.ProcessAuth("http://localhost:8080/callback", _clientId, _verifier,
+            context.GetRequestQueryData()["code"]!);
         Task.Run(async () => await _callback(spotifyClient));
 
         var successfulContent = await Renderer.RenderComponent(typeof(Successful),
