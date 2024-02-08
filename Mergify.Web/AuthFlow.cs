@@ -7,18 +7,21 @@ namespace Mergify.Web;
 
 public static class AuthFlow
 {
+    private static IDictionary<string, string> GetQueryParams(NavigationManager navigationManager)
+        => new Uri(navigationManager.Uri).Query.Replace("?", "").ToDictionary("[=&]");
+
     public static async Task<bool> IsLoggingIn(IJSRuntime js, NavigationManager navigationManager)
     {
         var cookieKeys = (await Cookies.GetCookies(js)).Keys;
         var uri = new Uri(navigationManager.Uri);
         var query = uri.Query.ToDictionary("[=&]");
-        return cookieKeys.Contains("verifier") && cookieKeys.Contains("challenge") && query.ContainsKey("code");
+        return cookieKeys.Contains("verifier") && GetQueryParams(navigationManager).ContainsKey("code");
     }
 
-    private static async Task PrepareLogin(IJSRuntime js, string verifier, string challenge)
+    private static async Task PrepareLogin(IJSRuntime js, string clientId, string verifier, string challenge)
     {
+        await Cookies.SetCookie(js, "clientId", clientId);
         await Cookies.SetCookie(js, "verifier", verifier);
-        await Cookies.SetCookie(js, "challenge", challenge);
     }
 
     public static async Task RequestLogin(IJSRuntime js, NavigationManager navigationManager, string clientId)
@@ -27,21 +30,23 @@ public static class AuthFlow
         var verifier = generatedCodes.Item1;
         var challenge = generatedCodes.Item2;
 
-        await PrepareLogin(js, verifier, challenge);
+        await PrepareLogin(js, clientId, verifier, challenge);
         navigationManager.NavigateTo(AuthUtils.GenerateRequest(clientId, challenge, navigationManager.BaseUri).ToUri()
             .ToString());
     }
 
     public static async Task ClearLoginCookies(IJSRuntime js)
     {
+        await Cookies.DeleteCookie(js, "clientId");
         await Cookies.DeleteCookie(js, "verifier");
-        await Cookies.DeleteCookie(js, "challenge");
     }
 
-    public static async Task HandleLogin(IJSRuntime js)
+    public static async Task<SpotifyClient> HandleLogin(IJSRuntime js, NavigationManager navigationManager)
     {
-        //TODO
-
+        var cookies = await Cookies.GetCookies(js);
         await ClearLoginCookies(js);
+
+        return await AuthUtils.ProcessAuth(navigationManager.BaseUri, cookies["clientId"], cookies["verifier"],
+            GetQueryParams(navigationManager)["code"]);
     }
 }

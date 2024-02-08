@@ -1,1 +1,25 @@
-﻿<i class="is-center text-grey">Coming soon...</i>
+﻿@inject IJSRuntime Js
+@inject NavigationManager Navigation
+@using SpotifyAPI.Web
+
+@if (_spotifyClient == null)
+{
+    <i class="is-center text-grey">Logging in...</i>
+}
+else
+{
+    <h2 class="is-center text-success">Hey, @_displayName!</h2>
+    <i class="is-center text-grey">Coming soon...</i>
+}
+
+@code
+{
+    SpotifyClient? _spotifyClient;
+    string? _displayName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _spotifyClient = await AuthFlow.HandleLogin(Js, Navigation);
+        _displayName = (await _spotifyClient.UserProfile.Current()).DisplayName;
+    }
+}

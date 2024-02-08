@@ -6,7 +6,7 @@ public static class StringUtils
 {
     public static Dictionary<string, string> ToDictionary(this string input, string pattern)
     {
-        var split = Regex.Split(input.Replace("?", ""), pattern);
+        var split = Regex.Split(input, pattern);
         return split.Where((_, i) => i % 2 == 0).Zip(split.Where((_, i) => i % 2 != 0)).ToDictionary();
     }
 }
