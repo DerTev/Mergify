@@ -13,8 +13,6 @@ public static class AuthFlow
     public static async Task<bool> IsLoggingIn(IJSRuntime js, NavigationManager navigationManager)
     {
         var cookieKeys = (await Cookies.GetCookies(js)).Keys;
-        var uri = new Uri(navigationManager.Uri);
-        var query = uri.Query.ToDictionary("[=&]");
         return cookieKeys.Contains("verifier") && GetQueryParams(navigationManager).ContainsKey("code");
     }
 
