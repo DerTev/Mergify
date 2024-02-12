@@ -1,25 +1,70 @@
 ﻿@inject IJSRuntime Js
 @inject NavigationManager Navigation
 @using SpotifyAPI.Web
+@using Mergify.Logic
 
-@if (_spotifyClient == null)
-{
-    <i class="is-center text-grey">Logging in...</i>
-}
-else
-{
-    <h2 class="is-center text-success">Hey, @_displayName!</h2>
-    <i class="is-center text-grey">Coming soon...</i>
-}
+<!-- TODO: Cannot merge from saved tracks yet -> I think because there is no uri set for the playlist -->
+
+<div class="text-center">
+    @if (_availableToPlaylists == null)
+    {
+        <i class="text-grey">Logging in...</i>
+    }
+    else
+    {
+        <h2>Merge...</h2>
+
+        <div style="width: 70%; margin-bottom: 1em;" class="container">
+            <div class="row">
+                <h3 class="col">... from</h3>
+                <h3 class="col">... to</h3>
+            </div>
+
+            <div class="row">
+                <select class="col" @oninput="args => _currentlySelectedFromPlaylist = args.Value!.ToString()">
+                    @foreach (var fromPlaylist in _availableFromPlaylists!)
+                    {
+                        <option value="@fromPlaylist.Uri">@fromPlaylist.Name</option>
+                    }
+                </select>
+
+                <select class="col" @oninput="args => _currentlySelectedToPlaylist = args.Value!.ToString()">
+                    @foreach (var toPlaylist in _availableToPlaylists!)
+                    {
+                        <option value="@toPlaylist.Uri">@toPlaylist.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (_currentlySelectedFromPlaylist != null && _currentlySelectedToPlaylist != null)
+        {
+            <button class="button outline primary" @onclick="Merge">
+                @(_mergeState == null ? "Merge!" : _mergeState.ToString())
+            </button>
+        }
+    }
+</div>
 
 @code
 {
     SpotifyClient? _spotifyClient;
-    string? _displayName;
+    List<FullPlaylist>? _availableFromPlaylists;
+    List<FullPlaylist>? _availableToPlaylists;
+    string? _currentlySelectedFromPlaylist;
+    string? _currentlySelectedToPlaylist;
+    MergeState? _mergeState;
+
+    async Task Merge()
+        => await Merger.Merge(_spotifyClient!,
+            _availableFromPlaylists!.Where(playlist => playlist.Uri == _currentlySelectedFromPlaylist).Take(1).ToList(),
+            _availableToPlaylists!.First(playlist => playlist.Uri == _currentlySelectedToPlaylist),
+            state => _mergeState = state);
 
     protected override async Task OnInitializedAsync()
     {
         _spotifyClient = await AuthFlow.HandleLogin(Js, Navigation);
-        _displayName = (await _spotifyClient.UserProfile.Current()).DisplayName;
+        _availableFromPlaylists = await Merger.GetAvailableFromPlaylists(_spotifyClient!);
+        _availableToPlaylists = await Merger.GetAvailableToPlaylists(_spotifyClient!);
     }
 }

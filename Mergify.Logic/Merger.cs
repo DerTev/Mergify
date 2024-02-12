@@ -12,17 +12,26 @@ public static class Merger
             .Concat(new[] { new FullPlaylist { Name = "Saved Tracks" } }).ToList();
 
     public static async Task<List<FullPlaylist>> GetAvailableToPlaylists(SpotifyClient spotifyClient)
-        => (await GetSavedPlaylists(spotifyClient))
-            .Where(playlist => playlist.Owner!.Id == spotifyClient.UserProfile.Current().GetAwaiter().GetResult().Id)
-            .ToList();
+    {
+        var savedPlaylists = await GetSavedPlaylists(spotifyClient);
+        var result = new List<FullPlaylist>();
+
+        foreach (var savedPlaylist in savedPlaylists)
+        {
+            if (savedPlaylist.Owner!.Id == (await spotifyClient.UserProfile.Current()).Id)
+                result.Add(savedPlaylist);
+        }
+
+        return result;
+    }
 
     public static async Task Merge(SpotifyClient spotifyClient, List<FullPlaylist> fromPlaylists,
         FullPlaylist toPlaylist, Action<MergeState> stateListener)
     {
         stateListener(MergeState.Indexing);
         var indexedItems = new List<string>();
-        fromPlaylists.ForEach(fromPlaylist =>
-            indexedItems.AddRange(fromPlaylist.GetUris(spotifyClient).GetAwaiter().GetResult()));
+        foreach (var fromPlaylist in fromPlaylists)
+            indexedItems.AddRange(await fromPlaylist.GetUris(spotifyClient));
         var urisToAdd = new List<string>();
         var toPlaylistUris =
             (await spotifyClient.PaginateAll(await spotifyClient.Playlists.GetItems(toPlaylist.Id!)))
