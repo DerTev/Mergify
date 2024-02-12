@@ -15,7 +15,7 @@ public static class SpotifyUtils
     }
 
     public static async Task<IEnumerable<string>> GetUris(this FullPlaylist playlist, SpotifyClient spotifyClient)
-        => playlist.Id == null
+        => playlist.Uri == "mergify:custom:saved-tracks"
             ? (await spotifyClient.PaginateAll(await spotifyClient.Library.GetTracks())).Select(item =>
                 item.Track.GetUri())
             : (await spotifyClient.PaginateAll(await spotifyClient.Playlists.GetItems(playlist.Id!)))

@@ -9,7 +9,7 @@ public static class Merger
 
     public static async Task<List<FullPlaylist>> GetAvailableFromPlaylists(SpotifyClient spotifyClient)
         => (await GetSavedPlaylists(spotifyClient))
-            .Concat(new[] { new FullPlaylist { Name = "Saved Tracks" } }).ToList();
+            .Concat(new[] { new FullPlaylist { Name = "Saved Tracks", Uri = "mergify:custom:saved-tracks" } }).ToList();
 
     public static async Task<List<FullPlaylist>> GetAvailableToPlaylists(SpotifyClient spotifyClient)
     {
